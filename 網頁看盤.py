@@ -15,40 +15,12 @@ st.set_page_config(
 )
 
 # ─── 🎮 核心極客外掛：透過 CSS 注入，將 Streamlit 背景與字體強行魔改成「最高亮度電競風」 ───
-# ⭐ 終極大重構：直接物理拔除全網頁最頂部的 stHeader/stAppHeader 區塊，徹底根絕上方露白問題
 st.markdown("""
     <style>
-        /* ─── 1. 終極絕殺：物理蒸發最上方的官方白條與多餘區塊 ─── */
-        header, 
-        [data-testid="stHeader"], 
-        .stAppHeader, 
-        iframe {
-            display: none !important;
-            height: 0px !important;
-            background-color: transparent !important;
-            opacity: 0 !important;
-        }
-        
-        /* 強制將所有可能露白的頂層容器背景染成純黑 */
-        [data-testid="stAppViewContainer"], 
-        [data-testid="stAppViewBlockBorderContainer"],
-        .stApp {
-            background-color: #050505 !important;
-            padding-top: 1rem !important; /* 留下一點點安全的電競邊距即可 */
-        }
-        
-        /* ─── 2. 深度地毯式獵殺所有隱藏的 Markdown 白底 ─── */
-        div[data-testid="stMarkdownContainer"], 
-        .element-container,
-        div.stMarkdown {
+        /* 整體背景與字體顏色魔改，強制所有人都是純黑 */
+        .stApp, div[data-testid="stMarkdownContainer"] {
             background-color: #050505 !important;
             color: #ffffff !important;
-        }
-        
-        /* 側邊欄變更為重工業黑 */
-        [data-testid="stSidebar"] {
-            background-color: #0d0d0d !important;
-            border-right: 2px solid #bd00ff !important;
         }
         
         /* 大標題：電光青發光 */
@@ -57,7 +29,7 @@ st.markdown("""
             text-shadow: 0 0 10px #00ffff !important;
             font-family: 'Courier New', Courier, monospace !important;
             font-weight: bold !important;
-            margin-top: 0px !important;
+            margin-top: -20px !important; 
             padding-top: 0px !important;
         }
         
@@ -89,7 +61,7 @@ st.markdown("""
             margin-bottom: 15px !important;
         }
         
-        /* ─── 3. 大字卡 (st.metric) 能見度校正 ─── */
+        /* ─── 大字卡 (st.metric) 能見度校正 ─── */
         [data-testid="stMetric"] {
             background-color: #111111 !important;
             border: 2px solid #bd00ff !important;
@@ -124,7 +96,7 @@ st.markdown("""
             border-radius: 4px !important;
         }
         
-        /* ─── 4. 表格文字能見度校正 ─── */
+        /* ─── 表格文字能見度校正 ─── */
         .stTable {
             background-color: #111111 !important;
             border: 2px solid #00ffff !important;
@@ -145,9 +117,11 @@ st.markdown("""
             border: 1px solid #222222 !important;
             padding: 8px !important;
         }
+        /* ⭐ 網頁主輸入框能見度高對比亮化 */
         input {
             color: #ffffff !important;
-            background-color: #222222 !important;
+            background-color: #111111 !important;
+            border: 1px solid #bd00ff !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -168,9 +142,8 @@ def download_stock_data(ticker):
     except Exception:
         return pd.DataFrame()
 
-# ─── 網頁側邊欄 (Sidebar)：控制台 ───
-st.sidebar.markdown("<h2 style='color:#bd00ff; text-shadow: 0 0 8px #bd00ff;'>🕹️ CONTROL_PANEL</h2>", unsafe_allow_html=True)
-user_input = st.sidebar.text_input("⌨️ 輸入台股代碼 [ENTER 發動]：", "3231").strip()
+# ─── ⭐ 核心控制台：直接大方地放在網頁正中央最上方 ───
+user_input = st.text_input("⌨️ 請輸入台股代碼（直接打數字，例如 3231 或 6182）[ENTER 發動]：", "3231").strip()
 
 if user_input:
     if user_input.isdigit():
@@ -188,9 +161,11 @@ if user_input:
             break
 
     if full_df.empty:
-        st.sidebar.error("❌ [ERROR] 無法識別該代碼，請重新輸入。")
+        st.error(f"❌ [ERROR] 無法識別代碼【{user_input}】，請重新輸入。")
     else:
-        st.sidebar.markdown(f"<div style='color:#00ff66; font-weight:bold; border: 1px solid #00ff66; padding: 5px; text-align:center;'>⚡ LINK_ESTABLISHED: {final_ticker}</div>", unsafe_allow_html=True)
+        # ─── ⭐ 標題動態變更 ───
+        st.title(f"⌨️ {final_ticker} // QUANT_TERMINAL")
+        st.write("---")
         
         # ─── 數據清洗與轉換 ───
         clean_data = {}
@@ -198,13 +173,8 @@ if user_input:
             if col_name in full_df.columns:
                 clean_data[col_name] = full_df[col_name].to_numpy().flatten()
             elif isinstance(full_df.columns, pd.MultiIndex) and col_name in full_df.columns.get_level_values(0):
-                clean_data[full_df.columns.get_level_values(0)] = full_df.xs(col_name, axis=1, level=0).to_numpy().flatten()
-                
-        # 降維並建立 DataFrame
-        if not clean_data:
-            for c in ['Open', 'High', 'Low', 'Close', 'Volume']:
-                clean_data[c] = full_df[c].to_numpy().flatten()
-                
+                clean_data[col_name] = full_df.xs(col_name, axis=1, level=0).to_numpy().flatten()
+        
         df = pd.DataFrame(clean_data, index=full_df.index)
         df['Volume'] = df['Volume'] / 1000.0  
         
@@ -248,17 +218,12 @@ if user_input:
         upper_shadow = high_p - max(open_p, close_p)
         body_size = abs(close_p - open_p)
         
-        # ─── ⭐ 動態大標題 ───
-        st.title(f"⌨️ {final_ticker} // QUANT_TERMINAL")
-        st.write("---")
-        
-        # ─── 網頁佈局：電競雙區分流 ───
+        # ─── 網頁佈局：直覺雙區分流 ───
         col1, col2 = st.columns([1, 2])
         
         with col1:
             st.markdown("<h3 style='color:#00ffff; text-shadow: 0 0 5px #00ffff;'>📊 REALTIME_METRICS</h3>", unsafe_allow_html=True)
             
-            # 高彩度 Metric 字卡
             price_delta = round(close_p - prev['Close'].item(), 2)
             st.metric(
                 label="CURRENT_PRICE (TWD)", 
@@ -266,7 +231,6 @@ if user_input:
                 delta=f"{price_delta} TWD"
             )
             
-            # 表格資料化
             status_data = {
                 "戰略參數": ["O / H / L (開高低)", "月線 (20MA)", "季線 (60MA)", "布林帶 (上/下)", "當日交易量", "量能潮放大比"],
                 "即時數據": [
@@ -280,7 +244,6 @@ if user_input:
             }
             st.table(pd.DataFrame(status_data))
             
-            # 任務目標 (MISSION_OBJECTIVE)
             st.markdown(f"""
                 <div style='background-color:#111111; border: 2px dashed #ff0055; padding:15px; border-radius:5px;'>
                     <h4 style='color:#ff0055; margin-top:0; text-shadow: 0 0 5px #ff0055;'>🎯 MISSION_OBJECTIVE // 紀律防線</h4>
@@ -293,7 +256,6 @@ if user_input:
         with col2:
             st.markdown("<h3 style='color:#bd00ff; text-shadow: 0 0 5px #bd00ff;'>🧠 AI_TACTICAL_REPORT</h3>", unsafe_allow_html=True)
             
-            # 處置股警示專區 (高對比紅)
             is_currently_disposed = df.index[-1] in disposal_indices
             if is_currently_disposed:
                 st.markdown(f"""
@@ -307,7 +269,6 @@ if user_input:
                 else:
                     st.error("🔴 **[主力棄守]** 處置期股價連續陰跌。小心大戶小單撤退，強制執行防守停利！")
             
-            # 常態技術型態演算法判斷
             if close_p > prev['Close'].item() and close_p > prev_2['Close'].item() and vol < prev['Volume'].item() and vol < prev_2['Volume'].item() and close_p > ma20 and not is_currently_disposed:
                 st.warning("⚠️ **[VOLUME_DIVERGENCE / 量價背離]** 股價創高開出但量能大退潮！小心遭遇誘多大反轉！")
             elif close_p >= bb_upper and (vol / vol_ma5) >= 1.5:
@@ -326,7 +287,7 @@ if user_input:
                 else:
                     st.warning("🔵 **[BEARISH_TREND]** 偏空格局：股價在月線之下常態修正，上方賣壓沉重。")
             
-            # ─── 🕹️ K 線繪圖 ───
+            # K 線繪圖
             plot_df = df.tail(60).copy()
             plot_df['Big_Up_Arrow'] = np.nan
             plot_df['Big_Down_Arrow'] = np.nan
