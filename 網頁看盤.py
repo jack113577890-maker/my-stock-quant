@@ -118,7 +118,7 @@ st.markdown("""
             padding: 8px !important;
         }
         
-        /* ⭐⭐ 終極暴力解決手機格子被吃掉：強制輸入框容器與外殼 100% 滿版擴展 ⭐⭐ */
+        /* 強制輸入框容器與外殼 100% 滿版擴展 */
         div[data-testid="stTextInput"], 
         div[data-testid="stTextInput"] > div,
         div[data-testid="stTextInput"] input {
@@ -131,9 +131,9 @@ st.markdown("""
         input {
             color: #ffffff !important;
             background-color: #111111 !important;
-            border: 2px solid #bd00ff !important; /* 邊框加粗成 2px 霓虹紫 */
+            border: 2px solid #bd00ff !important; 
             border-radius: 6px !important;
-            padding: 12px !important; /* 內部墊高，更好用手指戳 */
+            padding: 12px !important; 
             font-size: 1.1em !important;
         }
     </style>
@@ -155,7 +155,7 @@ def download_stock_data(ticker):
     except Exception:
         return pd.DataFrame()
 
-# ─── ⭐ 核心置頂控制台：獨立於所有佈局之外，100% 橫向滿版 ───
+# ─── 核心置頂控制台：獨立於所有佈局之外，100% 橫向滿版 ───
 user_input = st.text_input("⌨️ 請輸入台股代碼（例如 3231 或 6182）：", "3231").strip()
 
 if user_input:
@@ -235,11 +235,12 @@ if user_input:
         col1, col2 = st.columns([1, 2])
         
         with col1:
-            st.markdown("<h3 style='color:#00ffff; text-shadow: 0 0 5px #00ffff;'>📊 REALTIME_METRICS</h3>", unsafe_allow_html=True)
+            # ⭐ 物理蒸發 REALTIME_METRICS 中二字眼，改用更乾淨的子標題
+            st.markdown("<h3 style='color:#00ffff; text-shadow: 0 0 5px #00ffff;'>📈 MARKET_DATA</h3>", unsafe_allow_html=True)
             
             price_delta = round(close_p - prev['Close'].item(), 2)
             st.metric(
-                label="CURRENT_PRICE (TWD)", 
+                label="LATEST_CLOSE_PRICE (TWD)", # 修正名稱為更嚴謹的「最新收盤價」
                 value=f"{close_p} TWD", 
                 delta=f"{price_delta} TWD"
             )
@@ -267,7 +268,8 @@ if user_input:
             st.write("")
             
         with col2:
-            st.markdown("<h3 style='color:#bd00ff; text-shadow: 0 0 5px #bd00ff;'>🧠 AI_TACTICAL_REPORT</h3>", unsafe_allow_html=True)
+            # ⭐ 去油化：將 AI_TACTICAL_REPORT 改為更專業冷靜的 TACTICAL_REPORT
+            st.markdown("<h3 style='color:#bd00ff; text-shadow: 0 0 5px #bd00ff;'>📋 TACTICAL_REPORT</h3>", unsafe_allow_html=True)
             
             is_currently_disposed = df.index[-1] in disposal_indices
             if is_currently_disposed:
@@ -298,7 +300,7 @@ if user_input:
                 if close_p > ma20:
                     st.info("🟢 **[BULLISH_TREND]** 偏多格局：股價在月線之上常態震盪，多頭控盤中。")
                 else:
-                    st.warning("🔵 **[BEARISH_TREND]** 偏空格局：股價在月線之下常態修正，上方賣壓沉重。")
+                    st.warning("🔵 **[BEARISH_TREND]** 偏空格局：股價在月線之下常態修正，上方賣壓沉重. ")
             
             # K 線繪圖
             plot_df = df.tail(60).copy()
