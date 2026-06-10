@@ -29,7 +29,7 @@ st.markdown("""
             text-shadow: 0 0 10px #00ffff !important;
             font-family: 'Courier New', Courier, monospace !important;
             font-weight: bold !important;
-            margin-top: -20px !important; 
+            margin-top: -10px !important; 
             padding-top: 0px !important;
         }
         
@@ -117,11 +117,24 @@ st.markdown("""
             border: 1px solid #222222 !important;
             padding: 8px !important;
         }
-        /* ⭐ 網頁主輸入框能見度高對比亮化 */
+        
+        /* ⭐⭐ 終極暴力解決手機格子被吃掉：強制輸入框容器與外殼 100% 滿版擴展 ⭐⭐ */
+        div[data-testid="stTextInput"], 
+        div[data-testid="stTextInput"] > div,
+        div[data-testid="stTextInput"] input {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+            display: block !important;
+        }
+        
         input {
             color: #ffffff !important;
             background-color: #111111 !important;
-            border: 1px solid #bd00ff !important;
+            border: 2px solid #bd00ff !important; /* 邊框加粗成 2px 霓虹紫 */
+            border-radius: 6px !important;
+            padding: 12px !important; /* 內部墊高，更好用手指戳 */
+            font-size: 1.1em !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -142,8 +155,8 @@ def download_stock_data(ticker):
     except Exception:
         return pd.DataFrame()
 
-# ─── ⭐ 核心控制台：直接大方地放在網頁正中央最上方 ───
-user_input = st.text_input("⌨️ 請輸入台股代碼（直接打數字，例如 3231 或 6182）[ENTER 發動]：", "3231").strip()
+# ─── ⭐ 核心置頂控制台：獨立於所有佈局之外，100% 橫向滿版 ───
+user_input = st.text_input("⌨️ 請輸入台股代碼（例如 3231 或 6182）：", "3231").strip()
 
 if user_input:
     if user_input.isdigit():
@@ -163,7 +176,7 @@ if user_input:
     if full_df.empty:
         st.error(f"❌ [ERROR] 無法識別代碼【{user_input}】，請重新輸入。")
     else:
-        # ─── ⭐ 標題動態變更 ───
+        # ─── ⭐ 標題與分隔線 ───
         st.title(f"⌨️ {final_ticker} // QUANT_TERMINAL")
         st.write("---")
         
